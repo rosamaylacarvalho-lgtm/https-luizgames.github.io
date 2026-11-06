@@ -610,13 +610,52 @@ footer {
 
   <section class="reference-hero" aria-label="Capa gamer do Luizgames">
 <img src="capa-luizgames.png" alt="Nova capa gamer do Luizgames em azul neon">
-    <section class="updates-board" id="avisos">
+<section class="updates-board" id="avisos">
   <h2>📢 AVISOS DE ATUALIZAÇÕES!</h2>
 
-  <div class="updates-content">
-    <p>🚀 Fique ligado! Em breve teremos novidades no Luizgames!</p>
+  <div class="updates-content" id="listaAvisos">
+    <p>🚀 Carregando avisos...</p>
   </div>
-    </section>
+
+  <div class="admin-panel" id="adminPanel">
+    <h3>🔐 Painel do administrador</h3>
+
+    <div id="loginArea">
+      <input
+        type="email"
+        id="adminEmail"
+        placeholder="Seu e-mail"
+      >
+
+      <input
+        type="password"
+        id="adminPassword"
+        placeholder="Sua senha"
+      >
+
+      <button type="button" id="loginBtn">
+        Entrar
+      </button>
+    </div>
+
+    <div id="editorArea" hidden>
+      <textarea
+        id="novoAviso"
+        placeholder="Digite seu aviso..."
+      ></textarea>
+
+      <button type="button" id="publicarAviso">
+        Publicar aviso
+      </button>
+
+      <button type="button" id="sairAdmin">
+        Sair
+      </button>
+    </div>
+
+    <p id="adminStatus"></p>
+  </div>
+</section>
   </section>
   <p class="reference-caption">Imagem de apresentação do Luizgames • O botão Jogar Agora leva à biblioteca funcional abaixo.</p>
 
@@ -1233,6 +1272,146 @@ footer {
 
   reset();
 })();
+</script>
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCcLCbunDOODi7_pUNqsK-mEY3Xjy0D4DI",
+  authDomain: "luizgamesofc-45810.firebaseapp.com",
+  projectId: "luizgamesofc-45810",
+  storageBucket: "luizgamesofc-45810.firebasestorage.app",
+  messagingSenderId: "876720224982",
+  appId: "1:876720224982:web:0c6d6f255cd209e1cf6777",
+  measurementId: "G-393YCR9FZE"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const ADMIN_UID = "Cq3CvVpaVVa1qxtZs43RIXlbrTT2";
+
+const lista = document.getElementById("listaAvisos");
+const loginArea = document.getElementById("loginArea");
+const editorArea = document.getElementById("editorArea");
+const status = document.getElementById("adminStatus");
+
+async function carregarAvisos() {
+  try {
+    const resultado = await getDocs(collection(db, "avisos"));
+
+    const avisos = resultado.docs.map(doc => doc.data());
+
+    avisos.sort((a, b) => {
+      const dataA = a.data?.toMillis?.() || 0;
+      const dataB = b.data?.toMillis?.() || 0;
+      return dataB - dataA;
+    });
+
+    lista.replaceChildren();
+
+    if (avisos.length === 0) {
+      lista.textContent = "Ainda não há avisos publicados.";
+      return;
+    }
+
+    avisos.forEach(aviso => {
+      const bloco = document.createElement("div");
+      const titulo = document.createElement("h3");
+      const mensagem = document.createElement("p");
+
+      titulo.textContent = aviso.titulo || "Atualização do Luizgames";
+      mensagem.textContent = aviso.mensagem || "";
+
+      bloco.append(titulo, mensagem);
+      lista.appendChild(bloco);
+    });
+
+  } catch (erro) {
+    console.error("Erro ao carregar avisos:", erro);
+    lista.textContent = "Não foi possível carregar os avisos.";
+  }
+}
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("adminEmail").value;
+  const senha = document.getElementById("adminPassword").value;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, senha);
+    status.textContent = "Login realizado!";
+  } catch (erro) {
+    status.textContent = "Não foi possível entrar. Confira seus dados.";
+  }
+});
+
+document.getElementById("publicarAviso").addEventListener("click", async () => {
+  const usuario = auth.currentUser;
+  const mensagem = document.getElementById("novoAviso").value.trim();
+
+  if (!usuario || usuario.uid !== ADMIN_UID) {
+    status.textContent = "Acesso não autorizado.";
+    return;
+  }
+
+  if (!mensagem) {
+    status.textContent = "Digite um aviso primeiro.";
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "avisos"), {
+      titulo: "Atualização do Luizgames",
+      mensagem: mensagem,
+      data: serverTimestamp()
+    });
+
+    document.getElementById("novoAviso").value = "";
+    status.textContent = "Aviso publicado com sucesso!";
+    await carregarAvisos();
+
+  } catch (erro) {
+    console.error("Erro ao publicar:", erro);
+    status.textContent = "Erro ao publicar o aviso.";
+  }
+});
+
+document.getElementById("sairAdmin").addEventListener("click", async () => {
+  await signOut(auth);
+  status.textContent = "Você saiu do painel.";
+});
+
+onAuthStateChanged(auth, usuario => {
+  const autorizado = usuario && usuario.uid === ADMIN_UID;
+
+  loginArea.hidden = Boolean(autorizado);
+  editorArea.hidden = !autorizado;
+
+  if (autorizado) {
+    status.textContent = "Administrador conectado!";
+  } else if (usuario) {
+    status.textContent = "Esta conta não tem permissão de administrador.";
+  }
+
+  carregarAvisos();
+});
+
 </script>
 </body>
 </html>
