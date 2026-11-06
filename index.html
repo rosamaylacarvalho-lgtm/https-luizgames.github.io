@@ -579,8 +579,8 @@ footer {
     <div class="tools"><input id="search" type="search" placeholder="Buscar um jogo..." aria-label="Buscar um jogo"><select id="category" aria-label="Filtrar categoria"><option value="todos">Todas as categorias</option><option value="corrida">Corrida</option><option value="ação">Ação</option><option value="aventura">Aventura</option></select></div>
     <div class="grid" id="games">
       <article class="game" data-name="corrida neon" data-category="corrida"><div class="cover c1"><span>🏎️</span></div><div class="game-info"><span class="pill">Corrida</span><h3>Corrida Neon</h3><p>Prepare-se para acelerar em pistas cheias de luzes.</p><a class="btn primary" href="#jogar">Jogar no site</a></div></article>
-      <article class="game" data-name="pixel arena" data-category="ação"><div class="cover c2"><span>👾</span></div><div class="game-info"><span class="pill">Ação</span><h3>Pixel Arena</h3><p>Entre em uma arena retrô e encare novos desafios.</p><button class="btn secondary soon" disabled>Em breve</button></div></article>
-      <article class="game" data-name="missão espacial" data-category="aventura"><div class="cover c3"><span>🚀</span></div><div class="game-info"><span class="pill">Aventura</span><h3>Missão Espacial</h3><p>Explore o espaço e descubra o que existe além.</p><button class="btn secondary soon" disabled>Em breve</button></div></article>
+      <article class="game" data-name="pixel arena" data-category="ação"><div class="cover c2"><span>👾</span></div><div class="game-info"><span class="pill">Ação</span><h3>Pixel Arena</h3><p>Entre em uma arena retrô e encare novos desafios.</p><a class="btn primary" href="#pixel-arena">Jogar Pixel Arena</a>/div></article>
+      <article class="game" data-name="missão espacial" data-category="aventura"><div class="cover c3"><span>🚀</span></div><div class="game-info"><span class="pill">Aventura</span><h3>Missão Espacial</h3><p>Explore o espaço e descubra o que existe além.</p><a class="btn primary" href="#missao-espacial">Jogar Missão Espacial</a></button></div></article>
     </div>
     <p class="empty" id="empty">Nenhum jogo encontrado. Tente outra busca.</p>
   </section>
@@ -607,7 +607,61 @@ footer {
       </div>
       <p class="game-message" id="gameMessage" aria-live="polite">Clique em “Começar” para jogar.</p>
     </div>
-  </section>
+  </section> 
+<section class="wrap" id="pixel-arena">
+  <div class="section-head">
+    <div>
+      <h2>👾 Pixel Arena</h2>
+      <p class="sub">Colete cristais e desvie dos inimigos!</p>
+    </div>
+    <span class="tag">PIXEL GAME</span>
+  </div>
+  <div class="playbox">
+    <div class="playtop">
+      <h3>Desafio da Arena</h3>
+      <div class="scoreboard">
+        <small>PONTUAÇÃO</small>
+        <strong id="pixelScore">0</strong>
+      </div>
+    </div>
+    <canvas id="pixelCanvas" width="720" height="360"
+      style="display:block;width:100%;max-width:720px;margin:auto;background:#101822;border:1px solid #66c0f4;touch-action:none">
+    </canvas>
+    <div class="game-controls">
+      <button class="btn primary" id="pixelStart">▶ Começar</button>
+      <span class="instructions">Use as setas ou WASD para se movimentar.</span>
+    </div>
+    <p class="game-message" id="pixelMessage">Clique em Começar para jogar!</p>
+  </div>
+</section>
+
+<section class="wrap" id="missao-espacial">
+  <div class="section-head">
+    <div>
+      <h2>🚀 Missão Espacial</h2>
+      <p class="sub">Desvie dos asteroides e sobreviva no espaço!</p>
+    </div>
+    <span class="tag">SPACE GAME</span>
+  </div>
+  <div class="playbox">
+    <div class="playtop">
+      <h3>Sobrevivência Espacial</h3>
+      <div class="scoreboard">
+        <small>PONTUAÇÃO</small>
+        <strong id="spaceScore">0</strong>
+      </div>
+    </div>
+    <canvas id="spaceCanvas" width="720" height="360"
+      style="display:block;width:100%;max-width:720px;margin:auto;background:#080d1b;border:1px solid #66c0f4;touch-action:none">
+    </canvas>
+    <div class="game-controls">
+      <button class="btn primary" id="spaceStart">▶ Começar</button>
+      <span class="instructions">Use ← → ou A/D para pilotar.</span>
+    </div>
+    <p class="game-message" id="spaceMessage">Clique em Começar para jogar!</p>
+  </div>
+</section>
+
 
   <section class="wrap" id="sobre"><div class="about">
     <div><span class="tag">SOBRE O PROJETO</span><h2 style="margin-top:14px">Este é o Luizgames.</h2><p>Um espaço feito para reunir jogos e diversão. Esta é a primeira versão do site: os cards são exemplos e podem ser substituídos pelos seus jogos reais, links ou páginas de cada jogo.</p></div>
@@ -734,6 +788,308 @@ footer {
     restartBtn.addEventListener('click',reset);
     reset();
   })();
+
+// PIXEL ARENA
+(() => {
+  const canvas = document.getElementById("pixelCanvas");
+  const ctx = canvas.getContext("2d");
+  const scoreEl = document.getElementById("pixelScore");
+  const message = document.getElementById("pixelMessage");
+  const button = document.getElementById("pixelStart");
+
+  let player, crystals, enemies, score, running = false;
+  let frame, last = 0;
+  const keys = {};
+
+  function reset() {
+    player = { x: 350, y: 175, size: 22, speed: 230 };
+    crystals = [];
+    enemies = [];
+    score = 0;
+    running = false;
+    scoreEl.textContent = "0";
+    for (let i = 0; i < 5; i++) addCrystal();
+    for (let i = 0; i < 3; i++) addEnemy();
+    draw();
+    message.textContent = "Colete os cristais e fuja dos inimigos!";
+    button.textContent = "▶ Começar";
+    cancelAnimationFrame(frame);
+  }
+
+  function addCrystal() {
+    crystals.push({
+      x: 20 + Math.random() * 670,
+      y: 20 + Math.random() * 310
+    });
+  }
+
+  function addEnemy() {
+    enemies.push({
+      x: Math.random() * 680,
+      y: Math.random() * 320,
+      dx: Math.random() > .5 ? 90 : -90,
+      dy: Math.random() > .5 ? 80 : -80
+    });
+  }
+
+  function draw() {
+    ctx.fillStyle = "#101822";
+    ctx.fillRect(0, 0, 720, 360);
+
+    ctx.strokeStyle = "#223449";
+    for (let x = 0; x < 720; x += 24) {
+      for (let y = 0; y < 360; y += 24) {
+        ctx.strokeRect(x, y, 24, 24);
+      }
+    }
+
+    crystals.forEach(c => {
+      ctx.fillStyle = "#66ffcc";
+      ctx.fillRect(c.x, c.y, 15, 15);
+      ctx.fillStyle = "white";
+      ctx.fillRect(c.x + 5, c.y + 5, 5, 5);
+    });
+
+    enemies.forEach(e => {
+      ctx.fillStyle = "#ff4f88";
+      ctx.fillRect(e.x, e.y, 24, 24);
+      ctx.fillStyle = "white";
+      ctx.fillRect(e.x + 5, e.y + 6, 4, 4);
+      ctx.fillRect(e.x + 15, e.y + 6, 4, 4);
+    });
+
+    ctx.fillStyle = "#66c0f4";
+    ctx.fillRect(player.x, player.y, player.size, player.size);
+    ctx.fillStyle = "white";
+    ctx.fillRect(player.x + 5, player.y + 5, 4, 4);
+    ctx.fillRect(player.x + 14, player.y + 5, 4, 4);
+
+    if (!running) {
+      ctx.fillStyle = "white";
+      ctx.font = "20px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("PIXEL ARENA", 360, 28);
+    }
+  }
+
+  function loop(time) {
+    if (!running) return;
+    const dt = Math.min((time - last) / 1000 || 0, .04);
+    last = time;
+
+    if (keys.ArrowLeft || keys.a) player.x -= player.speed * dt;
+    if (keys.ArrowRight || keys.d) player.x += player.speed * dt;
+    if (keys.ArrowUp || keys.w) player.y -= player.speed * dt;
+    if (keys.ArrowDown || keys.s) player.y += player.speed * dt;
+
+    player.x = Math.max(0, Math.min(720 - player.size, player.x));
+    player.y = Math.max(0, Math.min(360 - player.size, player.y));
+
+    crystals = crystals.filter(c => {
+      const hit = Math.abs(player.x - c.x) < 24 &&
+                  Math.abs(player.y - c.y) < 24;
+      if (hit) {
+        score++;
+        scoreEl.textContent = score;
+        addCrystal();
+      }
+      return !hit;
+    });
+
+    enemies.forEach(e => {
+      e.x += e.dx * dt;
+      e.y += e.dy * dt;
+      if (e.x < 0 || e.x > 696) e.dx *= -1;
+      if (e.y < 0 || e.y > 336) e.dy *= -1;
+
+      if (Math.abs(player.x - e.x) < 22 &&
+          Math.abs(player.y - e.y) < 22) {
+        running = false;
+        message.textContent = "Fim de jogo! Pontuação: " + score;
+        button.textContent = "↻ Jogar novamente";
+      }
+    });
+
+    draw();
+    if (running) frame = requestAnimationFrame(loop);
+  }
+
+  button.addEventListener("click", () => {
+    if (running) return;
+    if (button.textContent.includes("novamente")) reset();
+    running = true;
+    last = 0;
+    message.textContent = "Boa sorte na arena!";
+    button.textContent = "Em andamento";
+    frame = requestAnimationFrame(loop);
+  });
+
+  canvas.addEventListener("pointermove", e => {
+    if (!running) return;
+    const r = canvas.getBoundingClientRect();
+    player.x = (e.clientX - r.left) * 720 / r.width - 11;
+    player.y = (e.clientY - r.top) * 360 / r.height - 11;
+  });
+
+  window.addEventListener("keydown", e => {
+    keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = true;
+  });
+  window.addEventListener("keyup", e => {
+    keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = false;
+  });
+
+  reset();
+})();
+
+// MISSAO ESPACIAL
+(() => {
+  const canvas = document.getElementById("spaceCanvas");
+  const ctx = canvas.getContext("2d");
+  const scoreEl = document.getElementById("spaceScore");
+  const message = document.getElementById("spaceMessage");
+  const button = document.getElementById("spaceStart");
+
+  let ship, asteroids, stars, score, running = false;
+  let frame, last = 0;
+  const keys = {};
+
+  function reset() {
+    ship = { x: 350, y: 305, w: 34, h: 30 };
+    asteroids = [];
+    stars = [];
+    score = 0;
+    running = false;
+    scoreEl.textContent = "0";
+    for (let i = 0; i < 6; i++) addStar();
+    for (let i = 0; i < 4; i++) addAsteroid();
+    draw();
+    message.textContent = "Desvie dos asteroides e colete estrelas!";
+    button.textContent = "▶ Começar";
+    cancelAnimationFrame(frame);
+  }
+
+  function addStar() {
+    stars.push({ x: 15 + Math.random() * 690, y: -20 });
+  }
+
+  function addAsteroid() {
+    const size = 20 + Math.random() * 20;
+    asteroids.push({
+      x: Math.random() * (720 - size),
+      y: -size,
+      size,
+      speed: 100 + Math.random() * 100
+    });
+  }
+
+  function draw() {
+    ctx.fillStyle = "#080d1b";
+    ctx.fillRect(0, 0, 720, 360);
+
+    ctx.fillStyle = "white";
+    for (let i = 0; i < 65; i++) {
+      const x = (i * 97) % 720;
+      const y = (i * 53) % 360;
+      ctx.fillRect(x, y, 2, 2);
+    }
+
+    stars.forEach(s => {
+      ctx.fillStyle = "#ffe66d";
+      ctx.fillRect(s.x, s.y, 10, 10);
+    });
+
+    asteroids.forEach(a => {
+      ctx.fillStyle = "#a4a4b5";
+      ctx.beginPath();
+      ctx.arc(a.x + a.size / 2, a.y + a.size / 2,
+        a.size / 2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.fillStyle = "#66c0f4";
+    ctx.beginPath();
+    ctx.moveTo(ship.x + ship.w / 2, ship.y);
+    ctx.lineTo(ship.x + ship.w, ship.y + ship.h);
+    ctx.lineTo(ship.x, ship.y + ship.h);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#ff9d42";
+    ctx.fillRect(ship.x + 11, ship.y + 28, 12, 9);
+  }
+
+  function loop(time) {
+    if (!running) return;
+    const dt = Math.min((time - last) / 1000 || 0, .04);
+    last = time;
+
+    if (keys.ArrowLeft || keys.a) ship.x -= 280 * dt;
+    if (keys.ArrowRight || keys.d) ship.x += 280 * dt;
+    ship.x = Math.max(0, Math.min(720 - ship.w, ship.x));
+
+    stars.forEach(s => s.y += 150 * dt);
+    asteroids.forEach(a => a.y += a.speed * dt);
+
+    stars = stars.filter(s => {
+      const hit = s.y > ship.y - 10 && s.y < ship.y + 35 &&
+                  s.x > ship.x - 10 && s.x < ship.x + ship.w;
+      if (hit) {
+        score += 5;
+        scoreEl.textContent = score;
+        addStar();
+      } else if (s.y > 360) {
+        addStar();
+      }
+      return !hit && s.y <= 360;
+    });
+
+    asteroids = asteroids.filter(a => {
+      const hit = a.x < ship.x + ship.w &&
+                  a.x + a.size > ship.x &&
+                  a.y < ship.y + ship.h &&
+                  a.y + a.size > ship.y;
+      if (hit) {
+        running = false;
+        message.textContent = "Missão encerrada! Pontuação: " + score;
+        button.textContent = "↻ Jogar novamente";
+      }
+      if (a.y > 360) {
+        addAsteroid();
+        return false;
+      }
+      return true;
+    });
+
+    draw();
+    if (running) frame = requestAnimationFrame(loop);
+  }
+
+  button.addEventListener("click", () => {
+    if (running) return;
+    if (button.textContent.includes("novamente")) reset();
+    running = true;
+    last = 0;
+    message.textContent = "Nave em movimento! Boa missão!";
+    button.textContent = "Em andamento";
+    frame = requestAnimationFrame(loop);
+  });
+
+  canvas.addEventListener("pointermove", e => {
+    if (!running) return;
+    const r = canvas.getBoundingClientRect();
+    ship.x = (e.clientX - r.left) * 720 / r.width - ship.w / 2;
+    ship.x = Math.max(0, Math.min(720 - ship.w, ship.x));
+  });
+
+  window.addEventListener("keydown", e => {
+    keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = true;
+  });
+  window.addEventListener("keyup", e => {
+    keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = false;
+  });
+
+  reset();
+})();
 
 </script>
 </body>
