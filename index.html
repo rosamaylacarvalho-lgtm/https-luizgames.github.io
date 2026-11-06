@@ -322,13 +322,19 @@ input:focus, select:focus {
 }
 
 .game {
-  background: linear-gradient(145deg, #223449, #1b2838);
-  border: 1px solid #ffffff18;
-  border-radius: 4px;
+  background: linear-gradient(145deg, #191936, #101025);
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  border-radius: 16px;
   overflow: hidden;
-  transition: .2s;
+  transition: .3s ease;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.25);
 }
 
+.game:hover {
+  transform: translateY(-6px);
+  border-color: #00d9ff;
+  box-shadow: 0 0 22px rgba(0, 217, 255, 0.25);
+}
 .game:hover {
   transform: translateY(-5px);
   border-color: var(--blue);
@@ -336,14 +342,24 @@ input:focus, select:focus {
 }
 
 .cover {
-  height: 175px;
+  height: 190px;
   display: grid;
   place-items: center;
-  font-size: 4.4rem;
+  font-size: 4.8rem;
   position: relative;
   overflow: hidden;
+  background: linear-gradient(135deg, #24104b, #101b42);
+  border-bottom: 1px solid rgba(0, 217, 255, 0.4);
 }
 
+.cover span {
+  filter: drop-shadow(0 0 15px #00d9ff);
+  transition: transform .3s ease;
+}
+
+.game:hover .cover span {
+  transform: scale(1.2);
+}
 .cover:after {
   content: "";
   position: absolute;
