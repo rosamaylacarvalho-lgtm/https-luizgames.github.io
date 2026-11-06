@@ -797,9 +797,22 @@ footer {
   const message = document.getElementById("pixelMessage");
   const button = document.getElementById("pixelStart");
 
-  let player, crystals, enemies, score, running = false;
-  let frame, last = 0;
-  const keys = {};
+  let collected = false;
+
+crystals = crystals.filter(c => {
+  const hit = Math.abs(player.x - c.x) < 24 &&
+              Math.abs(player.y - c.y) < 24;
+
+  if (hit) {
+    score++;
+    scoreEl.textContent = score;
+    collected = true;
+  }
+
+  return !hit;
+});
+
+if (collected) addCrystal();
 
   function reset() {
     player = { x: 350, y: 175, size: 22, speed: 230 };
@@ -1059,7 +1072,9 @@ footer {
       }
       return true;
     });
-
+while (asteroids.length < 4) {
+  addAsteroid();
+}
     draw();
     if (running) frame = requestAnimationFrame(loop);
   }
