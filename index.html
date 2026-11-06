@@ -579,8 +579,8 @@ footer {
     <div class="tools"><input id="search" type="search" placeholder="Buscar um jogo..." aria-label="Buscar um jogo"><select id="category" aria-label="Filtrar categoria"><option value="todos">Todas as categorias</option><option value="corrida">Corrida</option><option value="ação">Ação</option><option value="aventura">Aventura</option></select></div>
     <div class="grid" id="games">
       <article class="game" data-name="corrida neon" data-category="corrida"><div class="cover c1"><span>🏎️</span></div><div class="game-info"><span class="pill">Corrida</span><h3>Corrida Neon</h3><p>Prepare-se para acelerar em pistas cheias de luzes.</p><a class="btn primary" href="#jogar">Jogar no site</a></div></article>
-      <article class="game" data-name="pixel arena" data-category="ação"><div class="cover c2"><span>👾</span></div><div class="game-info"><span class="pill">Ação</span><h3>Pixel Arena</h3><p>Entre em uma arena retrô e encare novos desafios.</p><a class="btn primary" href="#pixel-arena">Jogar Pixel Arena</a>/div></article>
-      <article class="game" data-name="missão espacial" data-category="aventura"><div class="cover c3"><span>🚀</span></div><div class="game-info"><span class="pill">Aventura</span><h3>Missão Espacial</h3><p>Explore o espaço e descubra o que existe além.</p><a class="btn primary" href="#missao-espacial">Jogar Missão Espacial</a></button></div></article>
+      <article class="game" data-name="pixel arena" data-category="ação"><div class="cover c2"><span>👾</span></div><div class="game-info"><span class="pill">Ação</span><h3>Pixel Arena</h3><p>Entre em uma arena retrô e encare novos desafios.</p><a class="btn primary" href="#pixel-arena">Jogar Pixel Arena</a></div></article>
+      <article class="game" data-name="missão espacial" data-category="aventura"><div class="cover c3"><span>🚀</span></div><div class="game-info"><span class="pill">Aventura</span><h3>Missão Espacial</h3><p>Explore o espaço e descubra o que existe além.</p><a class="btn primary" href="#missao-espacial">Jogar Missão Espacial</a></div></article>
     </div>
     <p class="empty" id="empty">Nenhum jogo encontrado. Tente outra busca.</p>
   </section>
@@ -790,6 +790,7 @@ footer {
   })();
 
 // PIXEL ARENA
+// PIXEL ARENA
 (() => {
   const canvas = document.getElementById("pixelCanvas");
   const ctx = canvas.getContext("2d");
@@ -797,37 +798,11 @@ footer {
   const message = document.getElementById("pixelMessage");
   const button = document.getElementById("pixelStart");
 
-  let collected = false;
-
-crystals = crystals.filter(c => {
-  const hit = Math.abs(player.x - c.x) < 24 &&
-              Math.abs(player.y - c.y) < 24;
-
-  if (hit) {
-    score++;
-    scoreEl.textContent = score;
-    collected = true;
-  }
-
-  return !hit;
-});
-
-if (collected) addCrystal();
-
-  function reset() {
-    player = { x: 350, y: 175, size: 22, speed: 230 };
-    crystals = [];
-    enemies = [];
-    score = 0;
-    running = false;
-    scoreEl.textContent = "0";
-    for (let i = 0; i < 5; i++) addCrystal();
-    for (let i = 0; i < 3; i++) addEnemy();
-    draw();
-    message.textContent = "Colete os cristais e fuja dos inimigos!";
-    button.textContent = "▶ Começar";
-    cancelAnimationFrame(frame);
-  }
+  let player, crystals, enemies, score;
+  let running = false;
+  let frame = 0;
+  let last = 0;
+  const keys = {};
 
   function addCrystal() {
     crystals.push({
@@ -840,9 +815,26 @@ if (collected) addCrystal();
     enemies.push({
       x: Math.random() * 680,
       y: Math.random() * 320,
-      dx: Math.random() > .5 ? 90 : -90,
-      dy: Math.random() > .5 ? 80 : -80
+      dx: Math.random() > 0.5 ? 90 : -90,
+      dy: Math.random() > 0.5 ? 80 : -80
     });
+  }
+
+  function reset() {
+    cancelAnimationFrame(frame);
+    player = { x: 350, y: 175, size: 22, speed: 230 };
+    crystals = [];
+    enemies = [];
+    score = 0;
+    running = false;
+    scoreEl.textContent = "0";
+
+    for (let i = 0; i < 5; i++) addCrystal();
+    for (let i = 0; i < 3; i++) addEnemy();
+
+    button.textContent = "▶ Começar";
+    message.textContent = "Colete cristais e fuja dos inimigos!";
+    draw();
   }
 
   function draw() {
@@ -859,23 +851,15 @@ if (collected) addCrystal();
     crystals.forEach(c => {
       ctx.fillStyle = "#66ffcc";
       ctx.fillRect(c.x, c.y, 15, 15);
-      ctx.fillStyle = "white";
-      ctx.fillRect(c.x + 5, c.y + 5, 5, 5);
     });
 
     enemies.forEach(e => {
       ctx.fillStyle = "#ff4f88";
       ctx.fillRect(e.x, e.y, 24, 24);
-      ctx.fillStyle = "white";
-      ctx.fillRect(e.x + 5, e.y + 6, 4, 4);
-      ctx.fillRect(e.x + 15, e.y + 6, 4, 4);
     });
 
     ctx.fillStyle = "#66c0f4";
     ctx.fillRect(player.x, player.y, player.size, player.size);
-    ctx.fillStyle = "white";
-    ctx.fillRect(player.x + 5, player.y + 5, 4, 4);
-    ctx.fillRect(player.x + 14, player.y + 5, 4, 4);
 
     if (!running) {
       ctx.fillStyle = "white";
@@ -887,7 +871,8 @@ if (collected) addCrystal();
 
   function loop(time) {
     if (!running) return;
-    const dt = Math.min((time - last) / 1000 || 0, .04);
+
+    const dt = Math.min((time - last) / 1000 || 0, 0.04);
     last = time;
 
     if (keys.ArrowLeft || keys.a) player.x -= player.speed * dt;
@@ -898,25 +883,34 @@ if (collected) addCrystal();
     player.x = Math.max(0, Math.min(720 - player.size, player.x));
     player.y = Math.max(0, Math.min(360 - player.size, player.y));
 
+    let collected = false;
+
     crystals = crystals.filter(c => {
       const hit = Math.abs(player.x - c.x) < 24 &&
                   Math.abs(player.y - c.y) < 24;
+
       if (hit) {
         score++;
         scoreEl.textContent = score;
-        addCrystal();
+        collected = true;
       }
+
       return !hit;
     });
+
+    if (collected) addCrystal();
 
     enemies.forEach(e => {
       e.x += e.dx * dt;
       e.y += e.dy * dt;
+
       if (e.x < 0 || e.x > 696) e.dx *= -1;
       if (e.y < 0 || e.y > 336) e.dy *= -1;
 
-      if (Math.abs(player.x - e.x) < 22 &&
-          Math.abs(player.y - e.y) < 22) {
+      if (
+        Math.abs(player.x - e.x) < 22 &&
+        Math.abs(player.y - e.y) < 22
+      ) {
         running = false;
         message.textContent = "Fim de jogo! Pontuação: " + score;
         button.textContent = "↻ Jogar novamente";
@@ -924,12 +918,17 @@ if (collected) addCrystal();
     });
 
     draw();
+
     if (running) frame = requestAnimationFrame(loop);
   }
 
   button.addEventListener("click", () => {
     if (running) return;
-    if (button.textContent.includes("novamente")) reset();
+
+    if (button.textContent.includes("novamente")) {
+      reset();
+    }
+
     running = true;
     last = 0;
     message.textContent = "Boa sorte na arena!";
@@ -939,6 +938,7 @@ if (collected) addCrystal();
 
   canvas.addEventListener("pointermove", e => {
     if (!running) return;
+
     const r = canvas.getBoundingClientRect();
     player.x = (e.clientX - r.left) * 720 / r.width - 11;
     player.y = (e.clientY - r.top) * 360 / r.height - 11;
@@ -947,6 +947,7 @@ if (collected) addCrystal();
   window.addEventListener("keydown", e => {
     keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = true;
   });
+
   window.addEventListener("keyup", e => {
     keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = false;
   });
@@ -955,6 +956,7 @@ if (collected) addCrystal();
 })();
 
 // MISSAO ESPACIAL
+// MISSAO ESPACIAL
 (() => {
   const canvas = document.getElementById("spaceCanvas");
   const ctx = canvas.getContext("2d");
@@ -962,31 +964,43 @@ if (collected) addCrystal();
   const message = document.getElementById("spaceMessage");
   const button = document.getElementById("spaceStart");
 
-  let ship, asteroids, stars, score, running = false;
+  let ship, asteroids, stars, score, lives;
+  let running = false;
   let frame, last = 0;
+  let invulnerable = 0;
   const keys = {};
 
   function reset() {
+    cancelAnimationFrame(frame);
+
     ship = { x: 350, y: 305, w: 34, h: 30 };
     asteroids = [];
     stars = [];
     score = 0;
+    lives = 3;
+    invulnerable = 0;
     running = false;
+
     scoreEl.textContent = "0";
+
     for (let i = 0; i < 6; i++) addStar();
     for (let i = 0; i < 4; i++) addAsteroid();
+
     draw();
-    message.textContent = "Desvie dos asteroides e colete estrelas!";
+    message.textContent = "Desvie dos asteroides e colete estrelas! Vidas: 3";
     button.textContent = "▶ Começar";
-    cancelAnimationFrame(frame);
   }
 
   function addStar() {
-    stars.push({ x: 15 + Math.random() * 690, y: -20 });
+    stars.push({
+      x: 15 + Math.random() * 690,
+      y: -20
+    });
   }
 
   function addAsteroid() {
     const size = 20 + Math.random() * 20;
+
     asteroids.push({
       x: Math.random() * (720 - size),
       y: -size,
@@ -1000,6 +1014,7 @@ if (collected) addCrystal();
     ctx.fillRect(0, 0, 720, 360);
 
     ctx.fillStyle = "white";
+
     for (let i = 0; i < 65; i++) {
       const x = (i * 97) % 720;
       const y = (i * 53) % 360;
@@ -1014,10 +1029,17 @@ if (collected) addCrystal();
     asteroids.forEach(a => {
       ctx.fillStyle = "#a4a4b5";
       ctx.beginPath();
-      ctx.arc(a.x + a.size / 2, a.y + a.size / 2,
-        a.size / 2, 0, Math.PI * 2);
+      ctx.arc(
+        a.x + a.size / 2,
+        a.y + a.size / 2,
+        a.size / 2,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     });
+
+    ctx.globalAlpha = invulnerable > 0 ? 0.5 : 1;
 
     ctx.fillStyle = "#66c0f4";
     ctx.beginPath();
@@ -1029,83 +1051,133 @@ if (collected) addCrystal();
 
     ctx.fillStyle = "#ff9d42";
     ctx.fillRect(ship.x + 11, ship.y + 28, 12, 9);
+
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = "white";
+    ctx.font = "16px Arial";
+    ctx.textAlign = "left";
+    ctx.fillText("Vidas: " + lives, 12, 25);
   }
 
   function loop(time) {
     if (!running) return;
-    const dt = Math.min((time - last) / 1000 || 0, .04);
+
+    const dt = Math.min((time - last) / 1000 || 0, 0.04);
     last = time;
+
+    if (invulnerable > 0) {
+      invulnerable -= dt;
+    }
 
     if (keys.ArrowLeft || keys.a) ship.x -= 280 * dt;
     if (keys.ArrowRight || keys.d) ship.x += 280 * dt;
+
     ship.x = Math.max(0, Math.min(720 - ship.w, ship.x));
 
-    stars.forEach(s => s.y += 150 * dt);
-    asteroids.forEach(a => a.y += a.speed * dt);
+    stars.forEach(s => {
+      s.y += 150 * dt;
+    });
+
+    asteroids.forEach(a => {
+      a.y += a.speed * dt;
+    });
 
     stars = stars.filter(s => {
-      const hit = s.y > ship.y - 10 && s.y < ship.y + 35 &&
-                  s.x > ship.x - 10 && s.x < ship.x + ship.w;
+      const hit =
+        s.y > ship.y - 10 &&
+        s.y < ship.y + 35 &&
+        s.x > ship.x - 10 &&
+        s.x < ship.x + ship.w;
+
       if (hit) {
         score += 5;
         scoreEl.textContent = score;
-        addStar();
-      } else if (s.y > 360) {
-        addStar();
       }
+
       return !hit && s.y <= 360;
     });
 
+    while (stars.length < 6) {
+      addStar();
+    }
+
     asteroids = asteroids.filter(a => {
-      const hit = a.x < ship.x + ship.w &&
-                  a.x + a.size > ship.x &&
-                  a.y < ship.y + ship.h &&
-                  a.y + a.size > ship.y;
+      const hit =
+        a.x < ship.x + ship.w &&
+        a.x + a.size > ship.x &&
+        a.y < ship.y + ship.h &&
+        a.y + a.size > ship.y;
+
       if (hit) {
-        running = false;
-        message.textContent = "Missão encerrada! Pontuação: " + score;
-        button.textContent = "↻ Jogar novamente";
-      }
-      if (a.y > 360) {
-        addAsteroid();
+        if (invulnerable <= 0) {
+          lives--;
+          invulnerable = 1.2;
+
+          if (lives <= 0) {
+            running = false;
+            message.textContent =
+              "Missão encerrada! Pontuação: " + score;
+            button.textContent = "↻ Jogar novamente";
+          } else {
+            message.textContent =
+              "Cuidado! Você perdeu uma vida. Restam: " + lives;
+          }
+        }
+
         return false;
       }
-      return true;
+
+      return a.y <= 360;
     });
-while (asteroids.length < 4) {
-  addAsteroid();
-}
+
+    while (asteroids.length < 4) {
+      addAsteroid();
+    }
+
     draw();
-    if (running) frame = requestAnimationFrame(loop);
+
+    if (running) {
+      frame = requestAnimationFrame(loop);
+    }
   }
 
   button.addEventListener("click", () => {
     if (running) return;
-    if (button.textContent.includes("novamente")) reset();
+
+    if (button.textContent.includes("novamente")) {
+      reset();
+    }
+
     running = true;
     last = 0;
     message.textContent = "Nave em movimento! Boa missão!";
     button.textContent = "Em andamento";
+
     frame = requestAnimationFrame(loop);
   });
 
   canvas.addEventListener("pointermove", e => {
     if (!running) return;
+
     const r = canvas.getBoundingClientRect();
-    ship.x = (e.clientX - r.left) * 720 / r.width - ship.w / 2;
+
+    ship.x =
+      (e.clientX - r.left) * 720 / r.width - ship.w / 2;
+
     ship.x = Math.max(0, Math.min(720 - ship.w, ship.x));
   });
 
   window.addEventListener("keydown", e => {
     keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = true;
   });
+
   window.addEventListener("keyup", e => {
     keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = false;
   });
 
   reset();
 })();
-
 </script>
 </body>
 </html>
