@@ -13,6 +13,61 @@
   <meta property="og:url" content="https://rosamaylacarvalho-lgtm.github.io/https-luizgames.github.io/">
  <title>GameVerse | Seu Universo de Jogos</title>
   <style>
+    /* GAMEVERSE - NOVO VISUAL */
+:root {
+  --fundo: #080817;
+  --painel: #12122b;
+  --roxo: #8b5cf6;
+  --azul: #00d9ff;
+  --texto: #f4f2ff;
+}
+
+body {
+  background:
+    radial-gradient(ellipse at top, #211044 0%, #080817 55%, #050510 100%);
+  color: var(--texto);
+  font-family: 'Nunito', sans-serif;
+}
+
+header {
+  background: rgba(8, 8, 23, 0.95);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.5);
+  box-shadow: 0 4px 25px rgba(139, 92, 246, 0.15);
+}
+
+.logo {
+  color: white;
+  text-shadow: 0 0 12px var(--azul);
+}
+
+button, .btn {
+  background: linear-gradient(120deg, var(--roxo), var(--azul));
+  color: #080817;
+  border: none;
+  border-radius: 14px;
+  font-weight: 900;
+  transition: 0.25s;
+}
+
+button:hover, .btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 22px rgba(0, 217, 255, 0.45);
+}
+
+section {
+  border-radius: 18px;
+}
+
+.stats-board, .updates-board {
+  background: linear-gradient(145deg, #15152f, #0c0c20);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.12);
+}
+
+h1, h2, h3 {
+  color: white;
+  text-shadow: 0 0 12px rgba(139, 92, 246, 0.45);
+}
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&display=swap');
 
 body, button, input, textarea, select {
